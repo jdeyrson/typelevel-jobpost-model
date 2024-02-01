@@ -1,0 +1,94 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+
+### IntelliJ IDEA ###
+.idea/modules.xml
+.idea/jarRepositories.xml
+.idea/compiler.xml
+.idea/libraries/
+*.iws
+*.iml
+*.ipr
+*.log
+.idea
+out
+
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# vs code
+.vscode
+
+# bloop and metals
+.bloop
+.bsp
+.metals
+project/metals.sbt
+
+# scala 3
+.tasty
+
+# sbt
+project/project/
+project/target/
+dist/*
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+.cache
+.lib/
+project/local-plugins.sbt
+.ensime
+.ensime_cache/
+.sbt-scripted/
+local.sbt
+
+# mac
+.DS_Store
+
+# general
+.history
+.scala_dependencies
+.cache-main
+target
+*.class
+
+# VS Code
+.vscode/
+
+# Metals
+.bloop/
+.metals/
+metals.sbt
+
+# IDEA
+.idea_modules
+/.worksheet/
