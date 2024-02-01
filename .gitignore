@@ -17,12 +17,11 @@ target/
 .idea/jarRepositories.xml
 .idea/compiler.xml
 .idea/libraries/
+.idea/
 *.iws
 *.iml
 *.ipr
 *.log
-.idea
-out
 
 ### Eclipse ###
 .apt_generated
