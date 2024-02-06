@@ -9,9 +9,9 @@ import cats.effect.*
 import org.http4s.*
 import org.http4s.dsl.*
 import org.http4s.dsl.impl.*
-import org.http4s.ember.server.EmberServerBuilder
-import org.http4s.server.Router
+import org.http4s.server.*
 import org.typelevel.ci.CIString
+import org.http4s.ember.server.EmberServerBuilder
 
 import java.util.UUID
 
