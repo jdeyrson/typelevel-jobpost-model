@@ -1,15 +1,17 @@
 package com.model.foundations
 
-import cats._
-import cats.implicits._
+import cats.*
+import cats.implicits.*
 import io.circe.generic.auto.*
 import io.circe.syntax.*
 import org.http4s.circe.*
-import cats.effect.{IO, IOApp}
-import org.http4s.HttpRoutes
-import org.http4s.dsl.Http4sDsl
-import org.http4s.dsl.impl.{OptionalValidatingQueryParamDecoderMatcher, QueryParamDecoderMatcher}
+import cats.effect.*
+import org.http4s.*
+import org.http4s.dsl.*
+import org.http4s.dsl.impl.*
 import org.http4s.ember.server.EmberServerBuilder
+import org.http4s.server.Router
+import org.typelevel.ci.CIString
 
 import java.util.UUID
 
@@ -64,16 +66,30 @@ object Http4s extends IOApp.Simple {
           }
       case GET -> Root / "courses" / UUIDVar(courseId) / "students" =>
         CourseRepository.findCoursesById(courseId).map(_.students) match {
-          case Some(students) => Ok(students.asJson)
+          case Some(students) => Ok(students.asJson, Header.Raw(CIString("My-custom-header"), "rockthejvm"))
           case None => NotFound(s"No course with $courseId was found")
         }
     }
   }
 
+  def healthEndpoint[F[_]: Monad]: HttpRoutes[F] = {
+    val dsl = Http4sDsl[F]
+    import dsl.*
+    HttpRoutes.of[F] {
+      case GET -> Root / "health" => Ok("All going great!")
+    }
+  }
+
+  def allRoutes[F[_]: Monad]: HttpRoutes[F] = courseRoutes[F] <+> healthEndpoint[F]
+
+  def routerWithPathPrefixes = Router(
+    "/api" -> courseRoutes[IO],
+    "/private" -> healthEndpoint[IO]
+  ).orNotFound
 
   override def run = EmberServerBuilder
     .default[IO]
-    .withHttpApp(courseRoutes[IO].orNotFound)
+    .withHttpApp(routerWithPathPrefixes)
     .build
     .use(_ => IO.println("Server ready!") *> IO.never)
 }
