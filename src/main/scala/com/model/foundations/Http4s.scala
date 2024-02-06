@@ -20,7 +20,13 @@ object Http4s extends IOApp.Simple {
   // simulate an HTTP server with "students" and "courses"
   type Student = String
   case class Instructor(firstName: String, lastName: String)
-  case class Course(id: String, title: String, year: Int, students: List[Student], instructorName: String)
+  case class Course(
+      id: String,
+      title: String,
+      year: Int,
+      students: List[Student],
+      instructorName: String
+  )
 
   object CourseRepository {
     // a "database"
@@ -48,25 +54,29 @@ object Http4s extends IOApp.Simple {
   // GET localhost:8080/courses/6b69729c-56e4-49d3-aa71-9a66df3cc99a/students
 
   object InstructorQueryParamMatcher extends QueryParamDecoderMatcher[String]("instructor")
-  object YearQueryParamMatcher extends OptionalValidatingQueryParamDecoderMatcher[Int]("year")
+  object YearQueryParamMatcher       extends OptionalValidatingQueryParamDecoderMatcher[Int]("year")
 
   def courseRoutes[F[_]: Monad]: HttpRoutes[F] = {
     val dsl = Http4sDsl[F]
     import dsl.*
 
     HttpRoutes.of[F] {
-      case GET -> Root / "courses" :? InstructorQueryParamMatcher(instructor) +& YearQueryParamMatcher(maybeYear) =>
+      case GET -> Root / "courses" :? InstructorQueryParamMatcher(
+            instructor
+          ) +& YearQueryParamMatcher(maybeYear) =>
         val courses = CourseRepository.findCoursesByInstructor(instructor)
         maybeYear match {
-          case Some(y) => y.fold(
-            _ => BadRequest("Parameter 'year' is invalid"),
-            year => Ok(courses.filter(_.year == year).asJson)
-          )
+          case Some(y) =>
+            y.fold(
+              _ => BadRequest("Parameter 'year' is invalid"),
+              year => Ok(courses.filter(_.year == year).asJson)
+            )
           case None => Ok(courses.asJson)
-          }
+        }
       case GET -> Root / "courses" / UUIDVar(courseId) / "students" =>
         CourseRepository.findCoursesById(courseId).map(_.students) match {
-          case Some(students) => Ok(students.asJson, Header.Raw(CIString("My-custom-header"), "rockthejvm"))
+          case Some(students) =>
+            Ok(students.asJson, Header.Raw(CIString("My-custom-header"), "rockthejvm"))
           case None => NotFound(s"No course with $courseId was found")
         }
     }
@@ -75,15 +85,15 @@ object Http4s extends IOApp.Simple {
   def healthEndpoint[F[_]: Monad]: HttpRoutes[F] = {
     val dsl = Http4sDsl[F]
     import dsl.*
-    HttpRoutes.of[F] {
-      case GET -> Root / "health" => Ok("All going great!")
+    HttpRoutes.of[F] { case GET -> Root / "health" =>
+      Ok("All going great!")
     }
   }
 
   def allRoutes[F[_]: Monad]: HttpRoutes[F] = courseRoutes[F] <+> healthEndpoint[F]
 
   def routerWithPathPrefixes = Router(
-    "/api" -> courseRoutes[IO],
+    "/api"     -> courseRoutes[IO],
     "/private" -> healthEndpoint[IO]
   ).orNotFound
 
