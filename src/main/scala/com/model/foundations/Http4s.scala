@@ -55,12 +55,18 @@ object Http4s extends IOApp.Simple {
     HttpRoutes.of[F] {
       case GET -> Root / "courses" :? InstructorQueryParamMatcher(instructor) +& YearQueryParamMatcher(maybeYear) =>
         val courses = CourseRepository.findCoursesByInstructor(instructor)
-        maybeYear match
+        maybeYear match {
           case Some(y) => y.fold(
             _ => BadRequest("Parameter 'year' is invalid"),
             year => Ok(courses.filter(_.year == year).asJson)
           )
           case None => Ok(courses.asJson)
+          }
+      case GET -> Root / "courses" / UUIDVar(courseId) / "students" =>
+        CourseRepository.findCoursesById(courseId).map(_.students) match {
+          case Some(students) => Ok(students.asJson)
+          case None => NotFound(s"No course with $courseId was found")
+        }
     }
   }
 
