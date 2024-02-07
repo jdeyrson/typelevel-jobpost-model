@@ -15,7 +15,7 @@ import pureconfig.ConfigSource
 import com.model.jobpost.config.*
 import com.model.jobpost.config.syntax.*
 import com.model.jobpost.config.EmberConfig
-import com.model.jobpost.http.routes.HealthRoutes
+import com.model.jobpost.http.HttpApi
 
 object Application extends IOApp.Simple {
 
@@ -26,7 +26,7 @@ object Application extends IOApp.Simple {
       .default[IO]
       .withHost(config.host)
       .withPort(config.port)
-      .withHttpApp(HealthRoutes[IO].routes.orNotFound)
+      .withHttpApp(HttpApi[IO].endpoints.orNotFound)
       .build
       .use(_ => IO.println("Server ready!") *> IO.never)
   }
