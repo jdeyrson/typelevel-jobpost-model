@@ -10,17 +10,16 @@ import org.http4s.dsl.*
 import org.http4s.dsl.impl.*
 import org.http4s.server.*
 import org.http4s.ember.server.EmberServerBuilder
-import pureconfig.ConfigSource
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
+import com.model.jobpost.http.HttpApi
 import com.model.jobpost.config.*
 import com.model.jobpost.config.syntax.*
-import com.model.jobpost.config.EmberConfig
-import com.model.jobpost.http.HttpApi
-
+import pureconfig.ConfigSource
+import pureconfig.error.ConfigReaderException
 object Application extends IOApp.Simple {
-
-  val configSource = ConfigSource.default.load[EmberConfig]
-
+  given logger: Logger[IO] = Slf4jLogger.getLogger[IO]
   override def run = ConfigSource.default.loadF[IO, EmberConfig].flatMap { config =>
     EmberServerBuilder
       .default[IO]
