@@ -1,7 +1,7 @@
 package com.model.foundations
 
 import cats.effect.kernel.MonadCancelThrow
-import cats.effect.{ IO, IOApp }
+import cats.effect.{IO, IOApp}
 import doobie.hikari.HikariTransactor
 import doobie.util.transactor.Transactor
 import doobie.implicits.*
@@ -9,27 +9,49 @@ import doobie.postgres.*
 import doobie.postgres.implicits.*
 import doobie.util.ExecutionContexts
 
+// DOCS doobie
+// a FP (cats-effect) library for interacting with DBs (persistent store)
+
+/*
+CMDS docker
+$ docker-compose up
+$ docker ps (process status)
+$ docker exec -it typelevel-jobpost-model-db-1 psql -U docker
+
+docker=# create database demo;
+docker=# \c demo (connect to this demo DB)
+
+demo=# create table students(id serial not null, name character varying not null, primary key(id));
+demo=# select * from students;
+demo=# truncate students (deletes the date inside a table, but not the table itself)
+ */
+
 object Doobie extends IOApp.Simple {
 
   case class Student(id: Int, name: String)
 
+// DOCS Transactor data structure and APIs
+// A Transactor allow us to interact with the postgres DB
+// This transactor can be use to execute sql queries as an effect
+
   val xa: Transactor[IO] = Transactor.fromDriverManager[IO](
     "org.postgresql.Driver", // JDBC connector
+    // "jdbc:postgresql://localhost:5432/demo", (add next line for short)
     "jdbc:postgresql:demo", // database URL
-    "docker", // user
-    "docker" // password
+    "docker",               // user
+    "docker"                // pass
   )
 
   // read
   def findAllStudentNames: IO[List[String]] = {
-    val query = sql"select name from students".query[String]
+    val query  = sql"select name from students".query[String]
     val action = query.to[List]
     action.transact(xa)
   }
 
   // write
   def saveStudent(id: Int, name: String): IO[Int] = {
-    val query = sql"insert into students(id, name) values ($id, $name)"
+    val query  = sql"insert into students(id, name) values ($id, $name)"
     val action = query.update.run
     action.transact(xa)
   }
@@ -37,11 +59,11 @@ object Doobie extends IOApp.Simple {
   // read as Case Classes with fragments
   def findStudentsByInitial(letter: String): IO[List[Student]] = {
     val selectPart = fr"select id, name"
-    val fromPart = fr"from students"
-    val wherePart = fr"where left(name, 1) = $letter"
+    val fromPart   = fr"from students"
+    val wherePart  = fr"where left(name, 1) = $letter"
 
     val statement = selectPart ++ fromPart ++ wherePart
-    val action = statement.query[Student].to[List]
+    val action    = statement.query[Student].to[List]
 
     action.transact(xa)
   }
@@ -62,16 +84,19 @@ object Doobie extends IOApp.Simple {
         sql"select id, name from students".query[Student].to[List].transact(xa)
 
       override def create(name: String): F[Int] =
-        sql"insert into students(name) values ($name)".update.withUniqueGeneratedKeys[Int]("id").transact(xa)
+        sql"insert into students(name) values ($name)".update
+          .withUniqueGeneratedKeys[Int]("id")
+          .transact(xa)
     }
   }
 
   val postgresResource = for {
     ec <- ExecutionContexts.fixedThreadPool[IO](16)
-    xa <- HikariTransactor.newHikariTransactor[IO]("org.postgresql.Driver", // JDBC connector
-      "jdbc:postgresql:demo", // database URL
-      "docker", // user
-      "docker", // pass
+    xa <- HikariTransactor.newHikariTransactor[IO](
+      "org.postgresql.Driver", // JDBC connector
+      "jdbc:postgresql:demo",  // database URL
+      "docker",                // user
+      "docker",                // pass
       ec
     )
   } yield xa
@@ -79,9 +104,9 @@ object Doobie extends IOApp.Simple {
   val smallProgram = postgresResource.use { xa =>
     val studentsRepo = Students.make[IO](xa)
     for {
-      id <- studentsRepo.create("amy")
-      amy <- studentsRepo.findById(id)
-      _ <- IO.println(s"The first student $amy")
+      id       <- studentsRepo.create("Jonathan")
+      jonathan <- studentsRepo.findById(id)
+      _        <- IO.println(s"The first student is $jonathan")
     } yield ()
   }
 
