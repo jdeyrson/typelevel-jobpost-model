@@ -13,7 +13,7 @@ import doobie.util.ExecutionContexts
 // a FP (cats-effect) library for interacting with DBs (persistent store)
 
 /*
-CMDS docker
+READ docker
 $ docker-compose up
 $ docker ps (process status)
 $ docker exec -it typelevel-jobpost-model-db-1 psql -U docker
