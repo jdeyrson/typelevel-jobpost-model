@@ -1,8 +1,8 @@
 {
-  "company" : "My Domain Model",
+  "company" : "Jobpost, Inc.",
   "title" : "Team Lead",
   "description" : "Full time",
-  "externalUrl" : "domainascode.com",
+  "externalUrl" : "https://jobpostinc.com/",
   "remote" : false,
   "location" : "Latam"
 }

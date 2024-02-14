@@ -11,7 +11,7 @@ import org.typelevel.log4cats.Logger
 import java.util.UUID
 
 import com.model.jobpost.domain.job.*
-// import com.model.jobpost.domain.pagination.*
+import com.model.jobpost.domain.pagination.*
 import com.model.jobpost.logging.syntax.*
 
 trait Jobs[F[_]] {
@@ -19,6 +19,7 @@ trait Jobs[F[_]] {
   // CRUD
   def create(ownerEmail: String, jobInfo: JobInfo): F[UUID]
   def all(): F[List[Job]] // TODO fix thoughts on the all() method
+  def all(filter: JobFilter, pagination: Pagination): F[List[Job]]
   def find(id: UUID): F[Option[Job]]
   def update(id: UUID, jobInfo: JobInfo): F[Option[Job]]
   def delete(id: UUID): F[Int]
@@ -118,6 +119,67 @@ class LiveJobs[F[_]: MonadCancelThrow: Logger] private (xa: Transactor[F]) exten
       .query[Job]
       .to[List]
       .transact(xa)
+
+  override def all(filter: JobFilter, pagination: Pagination): F[List[Job]] = {
+    val selectFragment: Fragment =
+      fr"""
+      SELECT
+        id,
+        date,
+        ownerEmail,
+        company,
+        title,
+        description,
+        externalUrl,
+        remote,
+        location,
+        salaryLo,
+        salaryHi,
+        currency,
+        country,
+        tags,
+        image,
+        seniority,
+        other,
+        active
+      """
+    val fromFragment: Fragment =
+      fr"FROM jobs"
+    val whereFragment: Fragment = Fragments.whereAndOpt(
+      filter.companies.toNel.map(companies => Fragments.in(fr"company", companies)),
+      filter.locations.toNel.map(locations => Fragments.in(fr"location", locations)),
+      filter.countries.toNel.map(countries => Fragments.in(fr"country", countries)),
+      filter.seniorities.toNel.map(seniorities => Fragments.in(fr"seniority", seniorities)),
+      filter.tags.toNel.map(tags => // intersection between filter.tags and row's tag
+        Fragments.or(tags.toList.map(tag => fr"$tag=any(tags)"): _*)
+      ),
+      filter.maxSalary.map(salary => fr"salaryHi > $salary"),
+      filter.remote.some.map(remote => fr"remote = $remote")
+    )
+    val paginationFragment: Fragment =
+      fr"ORDER BY id LIMIT ${pagination.limit} OFFSET ${pagination.offset}"
+
+    val statement = selectFragment |+| fromFragment |+| whereFragment |+| paginationFragment
+    /*
+        WHERE company in [filter.companies]
+        AND location in [filter.locations]
+        AND country in [filter.countries]
+        AND seniority in [filter.seniorities]
+        AND (
+          tag1=any(tags)
+          OR tag2=any(tags)
+          OR ... (for every tag in filter.tags)
+        )
+        AND salaryHi > [filter.salary]
+        AND remote = [filter.remote]
+     */
+    Logger[F].info(statement.toString) *>
+      statement
+        .query[Job]
+        .to[List]
+        .transact(xa)
+        .logError(e => s"Failed qeury: ${e.getMessage}")
+  }
 
   override def find(id: UUID): F[Option[Job]] =
     sql"""

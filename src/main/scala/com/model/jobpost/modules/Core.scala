@@ -2,9 +2,10 @@ package com.model.jobpost.modules
 
 import cats.effect.*
 import cats.implicits.*
-import com.model.jobpost.core.*
+import cats.effect.kernel.Async
 import doobie.util.transactor.Transactor
 import org.typelevel.log4cats.Logger
+import com.model.jobpost.core.*
 
 final class Core[F[_]] private (val jobs: Jobs[F])
 

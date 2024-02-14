@@ -8,7 +8,7 @@ object job {
       date: Long,
       ownerEmail: String,
       jobInfo: JobInfo,
-      active: Boolean
+      active: Boolean = false
   )
 
   case class JobInfo(
@@ -31,6 +31,7 @@ object job {
   object JobInfo {
     val empty: JobInfo =
       JobInfo("", "", "", "", false, "", None, None, None, None, None, None, None, None)
+
     def minimal(
         company: String,
         title: String,
@@ -56,4 +57,14 @@ object job {
         None
       )
   }
+
+  final case class JobFilter(
+      companies: List[String] = List(),
+      locations: List[String] = List(),
+      countries: List[String] = List(),
+      seniorities: List[String] = List(),
+      tags: List[String] = List(),
+      maxSalary: Option[String] = None,
+      remote: Boolean = false
+  )
 }
