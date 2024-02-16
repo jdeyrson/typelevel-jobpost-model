@@ -28,28 +28,40 @@ object JobsPlayground extends IOApp.Simple {
   } yield xa
 
   val jobInfo = JobInfo.minimal(
-    company = "Rock the JVM",
+    company = "Jobpost, Inc",
     title = "Software Engineer",
-    description = "Best job ever",
-    externalUrl = "rockthejvm.com",
+    description = "Full time",
+    externalUrl = "jobpost.com",
     remote = true,
-    location = "Anywhere"
+    location = "Latam"
   )
 
   override def run: IO[Unit] = postgresResource.use { xa =>
     for {
-      jobs      <- LiveJobs[IO](xa)
-      _         <- IO(println("Ready. Next...")) *> IO(StdIn.readLine)
-      id        <- jobs.create("daniel@rockthejvm.com", jobInfo)
-      _         <- IO(println("Ready. Next...")) *> IO(StdIn.readLine)
-      list      <- jobs.all()
-      _         <- IO(println(s"All jobs: $list. Next...")) *> IO(StdIn.readLine)
-      _         <- jobs.update(id, jobInfo.copy(title = "Software rockstar"))
-      newJob    <- jobs.find(id)
-      _         <- IO(println(s"New job: $newJob. Next...")) *> IO(StdIn.readLine)
+      jobs <- LiveJobs[IO](xa)
+      _  <- IO(println("Create a new job entry [Press ENTER to continue...]")) *> IO(StdIn.readLine)
+      id <- jobs.create("myemail@jobpost.com", jobInfo)
+      _ <- IO(println("New job entry has been published [Press ENTER to see the job...]")) *> IO(
+        StdIn.readLine
+      )
+      list <- jobs.all()
+      _ <- IO(
+        println(s"Review new job's info: $list. [Press ENTER to update job's title...]")
+      ) *> IO(
+        StdIn.readLine
+      )
+      _      <- jobs.update(id, jobInfo.copy(title = "Scala Software Engineer"))
+      newJob <- jobs.find(id)
+      _ <- IO(
+        println(s"Job's title has been updated $newJob. [Press ENTER to delete this job entry...")
+      ) *> IO(StdIn.readLine)
       _         <- jobs.delete(id)
       listAfter <- jobs.all()
-      _         <- IO(println(s"Deleted job. List now: $listAfter. Next...")) *> IO(StdIn.readLine)
+      _ <- IO(
+        println(
+          s"Job entry has been deleted. List now: $listAfter. [Press ENTER to exit this program..."
+        )
+      ) *> IO(StdIn.readLine)
     } yield ()
   }
 }

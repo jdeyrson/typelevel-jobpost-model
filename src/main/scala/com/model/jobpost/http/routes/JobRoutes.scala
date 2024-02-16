@@ -38,7 +38,7 @@ class JobRoutes[F[_]: Concurrent: Logger] private (jobs: Jobs[F]) extends HttpVa
   private val findJobRoute: HttpRoutes[F] = HttpRoutes.of[F] { case GET -> Root / UUIDVar(id) =>
     jobs.find(id).flatMap {
       case Some(job) => Ok(job)
-      case None      => NotFound(FailureResponse(s"Job $id not found."))
+      case None      => NotFound(FailureResponse(s"Job $id not found in our persistent storage."))
     }
   }
 
@@ -47,7 +47,7 @@ class JobRoutes[F[_]: Concurrent: Logger] private (jobs: Jobs[F]) extends HttpVa
     case req @ POST -> Root / "create" =>
       req.validate[JobInfo] { jobInfo =>
         for {
-          jobId <- jobs.create("TODO@rockthejvm.com", jobInfo)
+          jobId <- jobs.create("myemail@jobpost.com", jobInfo)
           resp  <- Created(jobId)
         } yield resp
       }

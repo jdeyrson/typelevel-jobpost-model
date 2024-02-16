@@ -12,19 +12,7 @@ import doobie.util.ExecutionContexts
 // DOCS doobie
 // a FP (cats-effect) library for interacting with DBs (persistent store)
 
-/*
-READ docker
-$ docker-compose up
-$ docker ps (process status)
-$ docker exec -it typelevel-jobpost-model-db-1 psql -U docker
-
-docker=# create database demo;
-docker=# \c demo (connect to this demo DB)
-
-demo=# create table students(id serial not null, name character varying not null, primary key(id));
-demo=# select * from students;
-demo=# truncate students (deletes the date inside a table, but not the table itself)
- */
+// docker=# create table students(id serial not null, name character varying not null, primary key(id));
 
 object Doobie extends IOApp.Simple {
 
